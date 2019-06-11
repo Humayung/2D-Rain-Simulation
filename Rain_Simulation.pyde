@@ -6,7 +6,6 @@
   * MIT License
   */
 """
-
 class Spring:
     vx = 0.0
     vy = 0.0
@@ -58,30 +57,31 @@ class WaterSurface:
                 Spring(i * width / self.segment, y, gravity, mass, damping, viscosity))
 
     def run(self):
+        springs = self.springs
         strokeWeight(0.2)
         fill(255)
         beginShape()
         vertex(0, height)
         for i in range(len(self.springs)):
             if (i == 0):
-                self.springs[0].update(self.springs[0].x, self.springs[1].y)
-                self.springs[0].update(self.springs[0].x, self.posy)
-            elif (i == len(self.springs) - 1):
-                self.springs[len(self.springs) - 1].update(
-                    self.springs[len(self.springs) - 1].x, self.springs[len(self.springs) - 2].y)
-                self.springs[
-                    len(self.springs) - 1].update(self.springs[len(self.springs) - 1].x, self.posy)
+                springs[0].update(springs[0].x, springs[1].y)
+                springs[0].update(springs[0].x, self.posy)
+            elif (i == len(springs) - 1):
+                springs[len(springs) - 1].update(
+                    springs[len(springs) - 1].x, springs[len(springs) - 2].y)
+                springs[
+                    len(springs) - 1].update(springs[len(springs) - 1].x, self.posy)
             else:
-                self.springs[i].update(
-                    self.springs[i - 1].x, self.springs[i - 1].y)
-                self.springs[i].update(
-                    self.springs[i + 1].x, self.springs[i + 1].y)
-                self.springs[i].update(self.springs[i].x, self.posy)
-            curveVertex(self.springs[i].x, self.springs[i].y)
+                springs[i].update(
+                    springs[i - 1].x, springs[i - 1].y)
+                springs[i].update(
+                    springs[i + 1].x, springs[i + 1].y)
+                springs[i].update(springs[i].x, self.posy)
+            curveVertex(springs[i].x, springs[i].y)
         vertex(width, height)
         endShape()
-        self.springs[self.segment - 1].x = width + 50
-        self.springs[0].x = -50
+        springs[self.segment - 1].x = width + 50
+        springs[0].x = -50
 
     def currentSegment(self, pos, vel):
         for i in range(self.segment):
@@ -92,7 +92,7 @@ class WaterSurface:
     def drop(self, x, force):
         for i in range(self.segment):
             if (x > self.springs[i].x and x < self.springs[i].x + self.spacing):
-                self.springs[i].vy = force
+                self.springs[i].vy += force
 
 class Droplet:
 
@@ -115,7 +115,8 @@ class Droplet:
         if(ws.currentSegment(self.pos, self.vel.y)):
             ps.init(self.pos.x, self.pos.y + 20, self.pos.z,
                     self.size * 10, self.size, self.vel.mag())
-            ws.drop(self.pos.x, self.size * self.vel.mag() / 100)
+            force = 0.5 * self.size * self.vel.magSq()
+            ws.drop(self.pos.x, force*0.0018)
             self.off = True
 
 class Particle:
@@ -150,7 +151,6 @@ class ParticleSystem:
             s = self.sparks[i]
             if (s.off):
                 self.sparks.pop(i)
-
             else:
                 s.update()
                 s.show()
@@ -167,8 +167,9 @@ class RainSystem:
 
     def run(self):
         for i in range(self.f):
-            self.droplets.append(Droplet(random(
-                width), random(-100, -1000), random(500), random(random(0.5, 3), random(11))))
+            self.droplets.append(Droplet(random(width), random(-100, -1000),
+                                         random(500), random(random(0.5, 3),
+                                                             random(11))))
         for i in range(len(self.droplets) - 1, 0, -1):
             d = self.droplets[i]
             if (d.off):
@@ -186,9 +187,9 @@ def setup():
     global rs
     global gravity
     gravity = PVector(0, 0.25)
-    rs = RainSystem(1)
+    rs = RainSystem(8)
     ps = ParticleSystem()
-    ws = WaterSurface(height - 100, 150, 5, 50, 0.99, 0.5)
+    ws = WaterSurface(height - 100, 200, 5, 50, 0.99, 0.5)
 
 def draw():
     background(0)
